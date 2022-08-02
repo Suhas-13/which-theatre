@@ -1,7 +1,7 @@
 import requests
 from bs4 import BeautifulSoup
 from datetime import timedelta, datetime, time
-
+from Show import Show
 
 BASE_URL = "https://www.gv.com.sg/GVBuyTickets#/"
 CINEMA_URL = "https://www.gv.com.sg/.gv-api/cinemas?t=297_1659243048002"
@@ -26,6 +26,13 @@ headers = {
     'x_developer': 'ENOVAX',
 }
 
+def get_cinema_list(CINEMA_URL):
+    cinemas = requests.post(CINEMA_URL, headers=headers)
+    global CINEMA_IDS, CINEMA_NAMES
+    cinema_list = cinemas.json()['data']
+    for cin_list in cinema_list:
+        CINEMA_IDS[cin_list['id']] = cin_list['name']
+        CINEMA_NAMES.append(cin_list['name'])
 
 def get_gv_showtimes(TICKET_URL):
     no_advance_opts = {
@@ -40,14 +47,21 @@ def get_gv_showtimes(TICKET_URL):
         'date': '',
         'advanceSales': True,
     }
-    regular_timings = (requests.post('https://www.gv.com.sg/.gv-api/v2buytickets', headers=headers, json=no_advance_opts)).json()
-    advance_timings = (requests.post('https://www.gv.com.sg/.gv-api/v2buytickets', headers=headers, json=advance_opts)).json()
-    return advance_timings
-
-def get_cinema_list(CINEMA_URL):
-    cinemas = requests.post(CINEMA_URL, headers=headers)
+    regular_shows = (requests.post('https://www.gv.com.sg/.gv-api/v2buytickets', headers=headers, json=no_advance_opts)).json()['data']['cinemas']
+    advance_shows = (requests.post('https://www.gv.com.sg/.gv-api/v2buytickets', headers=headers, json=advance_opts)).json()['data']['cinemas']
     global CINEMA_IDS, CINEMA_NAMES
-    cinema_list = cinemas.json()['data']
-    for cin_list in cinema_list:
-        CINEMA_IDS[cin_list['id']] = cin_list['name']
-        CINEMA_NAMES.append(cin_list['name'])
+    if not CINEMA_IDS:
+        get_cinema_list(CINEMA_URL)
+    show_list = []
+    for cinema in regular_shows + advance_shows:
+        for movie in cinema['movies']:
+            has_subtitles = len(movie['subTitles']) > 0
+            subtitles = ','.join(movie['subTitles'])
+            for timing in movie['times']:
+                show_time = timing['time12'][0: len(timing['time12'] - 2)] + ' ' + timing['time12'][len(timing['time12'] - 2):]
+                show = Show(movie['filmTitle'], CINEMA_IDS[cinema['id']], "GV", has_subtitles, subtitles,
+                    timing['showDate'], "SGT", show_time,
+                        movie['rating'], timing['hall'])
+                show_list.append(show)
+    return show_list
+
