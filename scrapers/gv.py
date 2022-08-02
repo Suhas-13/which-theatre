@@ -1,6 +1,8 @@
 import requests
 from bs4 import BeautifulSoup
 from datetime import timedelta, datetime, time
+import sys
+sys.path.insert(0, '.')
 from show import Show
 
 BASE_URL = "https://www.gv.com.sg/GVBuyTickets#/"
@@ -62,8 +64,7 @@ def get_gv_showtimes():
             has_subtitles = len(movie['subTitles']) > 0
             subtitles = ','.join(movie['subTitles'])
             for timing in movie['times']:
-                show_time = timing['time12'][0: len(
-                    timing['time12'] - 2)] + ' ' + timing['time12'][len(timing['time12'] - 2):]
+                show_time = timing['time12'][0: len(timing['time12']) - 2] + ' ' + timing['time12'][len(timing['time12']) - 2:]
                 show = Show(movie['filmTitle'], CINEMA_IDS[cinema['id']], "GV", has_subtitles, subtitles,
                             timing['showDate'], "SGT", show_time,
                             movie['rating'], timing['hall'])
