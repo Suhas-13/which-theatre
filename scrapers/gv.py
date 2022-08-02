@@ -3,13 +3,15 @@ from bs4 import BeautifulSoup
 from datetime import timedelta, datetime, time
 import sys
 sys.path.insert(0, '.')
-from show import Show
+from show import Show, GVShow
 
 BASE_URL = "https://www.gv.com.sg/GVBuyTickets#/"
-CINEMA_URL = "https://www.gv.com.sg/.gv-api/cinemas?t=297_1659243048002"
+CINEMA_URL = "https://www.gv.com.sg/.gv-api/cinemas"
 TICKET_URL = "https://www.gv.com.sg/.gv-api/v2buytickets"
+SEAT_URL = "https://www.gv.com.sg/GVSeatSelection#/"
 CINEMA_IDS = {}
 CINEMA_NAMES = []
+
 headers = {
     'authority': 'www.gv.com.sg',
     'accept': 'application/json, text/plain, */*',
@@ -55,7 +57,7 @@ def get_gv_showtimes():
                      json=no_advance_opts)).json()['data']['cinemas']
     advance_shows = (requests.post(TICKET_URL, headers=headers,
                      json=advance_opts)).json()['data']['cinemas']
-    global CINEMA_IDS, CINEMA_NAMES
+    global CINEMA_IDS, CINEMA_NAMES, SEAT_URL
     if not CINEMA_IDS:
         get_cinema_list(CINEMA_URL)
     show_list = []
@@ -64,9 +66,11 @@ def get_gv_showtimes():
             has_subtitles = len(movie['subTitles']) > 0
             subtitles = ','.join(movie['subTitles'])
             for timing in movie['times']:
-                show_time = timing['time12'][0: len(timing['time12']) - 2] + ' ' + timing['time12'][len(timing['time12']) - 2:]
-                show = Show(movie['filmTitle'], CINEMA_IDS[cinema['id']], "GV", has_subtitles, subtitles,
+                show_time = timing['time24']
+                show_url = SEAT_URL + "cinemaId/" + str(cinema['id']) + "/filmCode/" + str(
+                    movie['filmCd']) + "/showDate/" + timing['showDate'] + "/showTime/" + timing['time24'] + "/hallNumber/" + timing['hall']
+                show = GVShow(movie['filmTitle'], CINEMA_IDS[cinema['id']], "GV", has_subtitles, subtitles,
                             timing['showDate'], "SGT", show_time,
-                            movie['rating'], timing['hall'])
+                            movie['rating'], timing['hall'], show_url, cinema['id'], movie['filmCd'])
                 show_list.append(show)
     return show_list

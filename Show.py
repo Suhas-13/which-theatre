@@ -1,6 +1,6 @@
 class Show:
   EXCLUSION_LIST = ["*", "(Eng Sub) "]
-  def __init__(self, movie, theatre, theatre_chain, has_subtitles, subtitles_language, show_date, timezone, start_time, rating, hall):
+  def __init__(self, movie, theatre, theatre_chain, has_subtitles, subtitles_language, show_date, timezone, start_time, rating, hall, show_url, seating = None):
     self.movie = self.normalize(movie)
     self.theatre = theatre
     self.theatre_chain = theatre_chain
@@ -12,6 +12,8 @@ class Show:
     self.premium = self.is_premium()
     self.rating = rating
     self.hall = hall
+    self.show_url = show_url
+    self.seating = seating
 
     if "(D-Box)" in self.movie:
       self.d_box = True
@@ -26,4 +28,12 @@ class Show:
 
   def is_premium(self):
     if self.theatre_chain == "GV":
-      return "Gold Class" in self.theatre
+      return "Gold Class" in self.theatre or "Deluxe" in self.theatre
+
+
+class GVShow(Show):
+  def __init__(self, movie, theatre, theatre_chain, has_subtitles, subtitles_language, show_date, timezone, start_time, rating, hall, show_url, cinema_id, film_code):
+    self.cinema_id = cinema_id
+    self.film_code = film_code
+    Show.__init__(self, movie, theatre, theatre_chain, has_subtitles, subtitles_language, show_date, timezone, start_time, rating, hall, show_url, seating = None)
+
