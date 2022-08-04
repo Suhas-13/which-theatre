@@ -1,6 +1,7 @@
 #!/usr/bin/python
 import psycopg2
 from config import config
+import time
 
 
 def connect():
@@ -20,7 +21,7 @@ def check_for_table(table_name):
     cur.execute(
         "select exists(select * from information_schema.tables where table_name=%s)", (table_name,))
     return cur.fetchone()[0]
-
+'''
 
 cur = connect()
 if not check_for_table("shows"):
@@ -42,3 +43,9 @@ if not check_for_table("shows"):
         )
         """)
     cur.execute(show_table)
+
+'''
+
+
+def block_gv_seats_until(block_length, booking_url, seats):
+    pass
