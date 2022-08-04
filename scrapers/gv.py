@@ -1,9 +1,12 @@
+import sys
+sys.path.insert(0, '.')
 from show import Show, GVShow
+from seating import SeatingPlan, Seat, GVSeatingPlan
+
 import requests
 from bs4 import BeautifulSoup
 from datetime import timedelta, datetime, time
-import sys
-sys.path.insert(0, '.')
+
 
 BASE_URL = "https://www.gv.com.sg/GVBuyTickets#/"
 CINEMA_URL = "https://www.gv.com.sg/.gv-api/cinemas"
@@ -74,3 +77,20 @@ def get_gv_showtimes():
                               movie['rating'])
                 show_list.append(show)
     return show_list
+
+def block_gv_seats_until(show_url, duration, seat_list):
+    current_time = time.time()
+    target_time = time.time() + duration
+    seat_obj_list = []
+    for seat_id in seat_list:
+        seat_obj_list.append(Seat.create_seat_by_id(seat_id))
+    show = GVShow.from_url(show_url)
+    blocking = True
+    while blocking:
+        if time.time() > target_time:
+            break
+        show.generate_seating_plan()
+
+        time.sleep(30)
+
+
