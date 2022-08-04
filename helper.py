@@ -2,7 +2,32 @@
 import psycopg2
 from config import config
 import time
+import requests
 
+
+def authenticate_session(session):
+    headers = {
+            'Host': 'www.gv.com.sg',
+            # 'Content-Length': '5',
+            'Sec-Ch-Ua': '"Chromium";v="103", ".Not/A)Brand";v="99"',
+            'Ts': 'YP6NlzFd9JWqpNjBLcKJbg==',
+            'X-Requested-With': 'XMLHttpRequest',
+            'Sec-Ch-Ua-Mobile': '?0',
+            'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/103.0.5060.134 Safari/537.36',
+            'Content-Type': 'application/x-www-form-urlencoded; charset=UTF-8',
+            'Accept': 'text/plain, */*; q=0.01',
+            'Tx': 'vJduj9ZLuUo4HsCc8iPG3wygsavQ4oOAaAZeXf3c1ck=',
+            'Sec-Ch-Ua-Platform': '"Windows"',
+            'Origin': 'https://www.gv.com.sg',
+            'Sec-Fetch-Site': 'same-origin',
+            'Sec-Fetch-Mode': 'cors',
+            'Sec-Fetch-Dest': 'empty',
+            'Referer': 'https://www.gv.com.sg/GVSeatSelection',
+            # 'Accept-Encoding': 'gzip, deflate',
+            'Accept-Language': 'en-GB,en;q=0.9',
+        }
+    auth_url = "https://www.gv.com.sg/.gv-api-v2/isauthenticated"
+    session.post(auth_url, headers = headers)
 
 def connect():
     """ Connect to the PostgreSQL database server """

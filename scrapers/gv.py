@@ -90,7 +90,13 @@ def block_gv_seats_until(show_url, duration, seat_list):
         if time.time() > target_time:
             break
         show.generate_seating_plan()
-
+        show.block_seats
         time.sleep(30)
 
 
+show=GVShow.from_url("https://www.gv.com.sg/GVSeatSelection#/cinemaId/155/filmCode/6800/showDate/09-08-2022/showTime/1050/hallNumber/5")
+seat_list = []
+for i in range(1,10):
+    for j in range(1, 10):
+        seat_list.append(Seat(i, j))
+show.block_seats(seat_list)
