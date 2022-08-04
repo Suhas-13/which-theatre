@@ -115,8 +115,14 @@ class GVShow(Show):
                 if seating_data[row][col]['rowId'] is None:
                   continue
                 real_row = ord(seating_data[row][col]['rowId']) - ord('A') + 1
-                real_col = int(seating_data[row][col]['colNumber'])
+                real_col = int(seating_data[row][col]['columnId'])
                 seating_plan.seat_matrix[real_row - 1][real_col - 1] = Seat(real_row, real_col, seat_status, seat_type)
+            i=0
+            while i < len(seating_data[row]):
+                if seating_data[row][i] is None:
+                  seating_data[row].pop(i)
+                  i-=1
+                i+=1
         self.seating_plan = seating_plan
 
     def block_seats(self, seats):

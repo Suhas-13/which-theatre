@@ -17,12 +17,12 @@ class SeatingPlan:
     def full_search(self, row, col):
         for r1 in self.seat_matrix:
             for c1 in r1:
-                if c1.row == row and c1.col == col:
+                if c1 and c1.row == row and c1.col == col:
                     return self.seat_matrix[row][col]
         return None
 
     def get_seat(self, row, col):
-        if row < 0 or col < 0 or row > self.row_count() or col > len(self.seat_matrix[row - 1]):
+        if row < 0 or col < 0 or row > self.row_count() or col > len(self.seat_matrix[row - 1]) or self.seat_matrix[row - 1][col - 1] is None:
             return self.full_search(row, col)
         elif self.seat_matrix[row - 1][col - 1].row == row and self.seat_matrix[row - 1][col - 1].col == col:
             return self.seat_matrix[row - 1][col - 1]
