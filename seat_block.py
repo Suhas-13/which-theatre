@@ -14,16 +14,16 @@ class GVShowBlock:
     def start_blocking(self):
         if self.duration:
             target_time = time.time() + self.duration
-        seat_obj_list = []
         self.blocking = True
-        self.cookies = None
         while self.blocking:
             if self.duration and time.time() > target_time:
                 break
             self.show.generate_seating_plan()
-            self.cookies = self.show.block_seats(self.seats)
+            cookies = self.show.block_seats(self.seats)
+            if cookies:
+                self.cookies = cookies
             time.sleep(30)
 
-    def stop_blocking_seats(self):
+    def stop_blocking(self):
         self.blocking = False
         self.show.unblock_seats(self.seats, self.cookies)

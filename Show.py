@@ -112,6 +112,7 @@ class GVShow(Show):
             seating_plan.seat_matrix[row] = [None] * len(seating_data[row])
         for row in range(len(seating_data)):
             for col in range(len(seating_data[row])):
+                #print(seating_data[row][col])
                 seat_status = seating_plan.get_gv_seat_status(seating_data[row][col]['status'])
                 seat_type = seating_plan.get_gv_seat_type(seating_data[row][col]['type'])
                 if seating_data[row][col]['rowId'] is None:

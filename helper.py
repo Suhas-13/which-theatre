@@ -27,7 +27,7 @@ def authenticate_session(session):
         # 'Accept-Encoding': 'gzip, deflate',
         'Accept-Language': 'en-GB,en;q=0.9',
     }
-    auth_url = "https://www.gv.com.sg/.gv-api-v2/isauthenticated"
+    auth_url = "https://www.gv.com.sg/.gv-api/isauthenticated"
     session.post(auth_url, headers=headers)
 
 
@@ -97,7 +97,6 @@ def make_land_request(session, seats_data):
     land_url = "https://upayment.gv.com.sg/web/land"
     session.headers = {
         'Host': 'upayment.gv.com.sg',
-        # 'Content-Length': '203',
         'Cache-Control': 'max-age=0',
         'Sec-Ch-Ua': '"Chromium";v="103", ".Not/A)Brand";v="99"',
         'Sec-Ch-Ua-Mobile': '?0',
@@ -112,7 +111,6 @@ def make_land_request(session, seats_data):
         'Sec-Fetch-User': '?1',
         'Sec-Fetch-Dest': 'document',
         'Referer': 'https://www.gv.com.sg/',
-        # 'Accept-Encoding': 'gzip, deflate',
         'Accept-Language': 'en-GB,en;q=0.9',
     }
     land_response = session.post(land_url, data=seats_data)
