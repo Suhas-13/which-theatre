@@ -1,5 +1,5 @@
 import requests
-from helper import authenticate_session
+from helper import authenticate_session, confirm_seat_selection, get_seat_str, make_land_request, set_base_headers
 from seating import SeatingPlan, Seat, GVSeatingPlan
 import urllib.parse
 requests.adapters.DEFAULT_RETRIES = 3
@@ -122,42 +122,14 @@ class GVShow(Show):
         self.seating_plan = seating_plan
 
     def block_seats(self, seats):
-        seat_list = []
-        for seat in seats:
-            seat_id = (chr(ord('A') + seat.row - 1) +
-                             ":" + str(seat.col).zfill(2))
-            seat_index = self.seating_plan.get_seat_index(seat.row, seat.col)
-            #print(seat_index)
-            if not seat_index:
-                continue
-            new_seat = self.seating_plan.get_seat(seat_index[0], seat_index[1])
-            if new_seat and new_seat.is_available():
-              print(str(seat_id) + "," + str(new_seat.row) + "," + str(new_seat.col))
-              seat_list.append(seat_id)
-        if len(seat_list) == 0:
-          return False
-        seat_str = "|".join(seat_list) + '|'
+        seat_str = get_seat_str(seats, self.seating_plan)
+        if not seat_str:
+            return None
         session = requests.Session()
         # authenticate and generate JSESSIONID
         authenticate_session(session)
         # obtain ticket ID
-        session.headers = {
-            'Host': 'www.gv.com.sg',
-            # 'Content-Length': '137',
-            'Sec-Ch-Ua': '"Chromium";v="103", ".Not/A)Brand";v="99"',
-            'Accept': 'application/json, text/plain, */*',
-            'X_developer': 'ENOVAX',
-            'Content-Type': 'application/json; charset=UTF-8',
-            'Sec-Ch-Ua-Mobile': '?0',
-            'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/103.0.5060.134 Safari/537.36',
-            'Sec-Ch-Ua-Platform': '"Windows"',
-            'Origin': 'https://www.gv.com.sg',
-            'Sec-Fetch-Site': 'same-origin',
-            'Sec-Fetch-Mode': 'cors',
-            'Sec-Fetch-Dest': 'empty',
-            'Referer': 'https://www.gv.com.sg/GVSeatSelection',
-            'Accept-Language': 'en-GB,en;q=0.9',
-        }
+        set_base_headers(session)
         ticket_url = "https://www.gv.com.sg/.gv-api/getticketprice"
         ticket_data = {"cinemaId": self.cinema_id, "filmCode": self.film_code, "showDate": self.show_date,
                        "showTime": self.start_time, "hallNumber": self.hall, "sectionId": "1", "seatType": "N", "sms": False}
@@ -168,32 +140,22 @@ class GVShow(Show):
         payment_data = {"priceId": ticket_id}
         payment_request = session.post(payment_url, json=payment_data)
         # confirm seats
-        seats_data = {"seats": seat_str, "paymentModeId": 1, "appId": "",
-                      "vcJson": "", "patronType": None, "declaredQty": None}
-        seats_url = "https://www.gv.com.sg/.gv-api/confirmselection"
-        seats_request = session.post(seats_url, json=seats_data)
-        seats_data = "data=" + urllib.parse.quote(seats_request.json()['data'])
+        seats_data = confirm_seat_selection(session, seat_str)
         # land request
-        land_url = "https://upayment.gv.com.sg/web/land"
-        session.headers = {
-            'Host': 'upayment.gv.com.sg',
-            # 'Content-Length': '203',
-            'Cache-Control': 'max-age=0',
-            'Sec-Ch-Ua': '"Chromium";v="103", ".Not/A)Brand";v="99"',
-            'Sec-Ch-Ua-Mobile': '?0',
-            'Sec-Ch-Ua-Platform': '"Windows"',
-            'Upgrade-Insecure-Requests': '1',
-            'Origin': 'https://www.gv.com.sg',
-            'Content-Type': 'application/x-www-form-urlencoded',
-            'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/103.0.5060.134 Safari/537.36',
-            'Accept': 'text/html,application/xhtml+xml,application/xml;q=0.9,image/avif,image/webp,image/apng,*/*;q=0.8,application/signed-exchange;v=b3;q=0.9',
-            'Sec-Fetch-Site': 'same-site',
-            'Sec-Fetch-Mode': 'navigate',
-            'Sec-Fetch-User': '?1',
-            'Sec-Fetch-Dest': 'document',
-            'Referer': 'https://www.gv.com.sg/',
-            # 'Accept-Encoding': 'gzip, deflate',
-            'Accept-Language': 'en-GB,en;q=0.9',
-        }
-        land_request = session.post(land_url, data=seats_data)
-        return land_request.status_code == 200 and 'error' not in land_request.url
+        land_response = make_land_request(session, seats_data)
+        if land_response.status_code == 200 and 'error' not in land_response.url:
+            return session.cookies
+        return None
+
+    def unblock_seats(self, seats, cookies):
+        session = requests.Session()
+        set_base_headers(session)
+        session.cookies = cookies
+        seat_str = get_seat_str(seats, self.seating_plan)
+        if not seat_str:
+            return None
+        seats_data = confirm_seat_selection(session, seat_str)
+        land_response = make_land_request(session, seats_data)
+        if land_response.status_code == 200 and 'error' in land_response.url:
+            return session.cookies
+        return None
