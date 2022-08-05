@@ -18,16 +18,32 @@ class SeatingPlan:
         for r1 in self.seat_matrix:
             for c1 in r1:
                 if c1 and c1.row == row and c1.col == col:
-                    return self.seat_matrix[row][col]
+                    return (r1, c1)
         return None
 
-    def get_seat(self, row, col):
-        if row < 0 or col < 0 or row > self.row_count() or col > len(self.seat_matrix[row - 1]) or self.seat_matrix[row - 1][col - 1] is None:
+    def get_seat_index(self, row, col):
+        if row < 1 or col < 1 or row > self.row_count() or col > len(self.seat_matrix[row - 1]) or self.seat_matrix[row - 1][col - 1] is None:
             return self.full_search(row, col)
         elif self.seat_matrix[row - 1][col - 1].row == row and self.seat_matrix[row - 1][col - 1].col == col:
-            return self.seat_matrix[row - 1][col - 1]
+            return (row - 1, col - 1)
         else:
             return self.full_search(row, col)
+
+    def get_seat(self, row, col):
+        if row < 0 or col < 0 or row > self.row_count() or col > len(self.seat_matrix[row]):
+            return None
+        return self.seat_matrix[row][col]
+
+    def set_seat(self, row, col, new_seat):
+        row -= 1
+        col -=1
+        if row < 0 or col < 0 or row >= self.row_count() or col >= len(self.seat_matrix[row]):
+            return False
+        else:
+            self.seat_matrix[row][col] = new_seat
+            return True
+
+
 
 
 

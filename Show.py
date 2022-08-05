@@ -107,22 +107,18 @@ class GVShow(Show):
         if not seating_data:
             self.seating_plan = seating_plan
             return
+        seating_plan.seat_matrix = [[]] * len(seating_data)
         for row in range(len(seating_data)):
-            seating_plan.seat_matrix.append([None] * len(seating_data[row]))
+            seating_plan.seat_matrix[row] = [None] * len(seating_data[row])
+        for row in range(len(seating_data)):
             for col in range(len(seating_data[row])):
                 seat_status = seating_plan.get_gv_seat_status(seating_data[row][col]['status'])
                 seat_type = seating_plan.get_gv_seat_type(seating_data[row][col]['type'])
                 if seating_data[row][col]['rowId'] is None:
-                  continue
+                    continue
                 real_row = ord(seating_data[row][col]['rowId']) - ord('A') + 1
                 real_col = int(seating_data[row][col]['columnId'])
-                seating_plan.seat_matrix[real_row - 1][real_col - 1] = Seat(real_row, real_col, seat_status, seat_type)
-            i=0
-            while i < len(seating_data[row]):
-                if seating_data[row][i] is None:
-                  seating_data[row].pop(i)
-                  i-=1
-                i+=1
+                seating_plan.set_seat(real_row, real_col, Seat(real_row, real_col, seat_status, seat_type))
         self.seating_plan = seating_plan
 
     def block_seats(self, seats):
@@ -130,7 +126,11 @@ class GVShow(Show):
         for seat in seats:
             seat_id = (chr(ord('A') + seat.row - 1) +
                              ":" + str(seat.col).zfill(2))
-            new_seat = self.seating_plan.get_seat(seat.row, seat.col)
+            seat_index = self.seating_plan.get_seat_index(seat.row, seat.col)
+            #print(seat_index)
+            if not seat_index:
+                continue
+            new_seat = self.seating_plan.get_seat(seat_index[0], seat_index[1])
             if new_seat and new_seat.is_available():
               print(str(seat_id) + "," + str(new_seat.row) + "," + str(new_seat.col))
               seat_list.append(seat_id)
