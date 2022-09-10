@@ -81,12 +81,3 @@ def get_gv_showtimes():
 
 
 
-
-'''
-for i in range(4,6):
-    for j in range(4, 6):
-        seat_list.append(Seat(i, j))
-'''
-
-block = GVShowBlock("https://www.gv.com.sg/GVSeatSelection#/cinemaId/051/filmCode/3860/showDate/05-08-2022/showTime/1800/hallNumber/1", [Seat(5,5), Seat(5,6)], 1000)
-block.start_blocking()
